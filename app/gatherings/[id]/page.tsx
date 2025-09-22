@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { format } from "date-fns"
 import { PlusCircle, ArrowLeft, Trash2, Copy, Check, ArrowDown, ArrowUp, UserPlus, ChevronDown } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { getUserEmojis } from "@/lib/utils"
@@ -28,9 +29,6 @@ import { EditExpenseDialog } from "@/components/edit-expense-dialog"
 import { ShareButton } from "@/components/share-button"
 import { useMobileDialog } from "@/lib/hooks"
 import { formatCurrency } from "@/utils/formatCurrency"
-
-// Update imports to use our utility file
-import { formatDisplayDate } from "@/utils/date-utils"
 
 // Add this function to handle copying text to clipboard
 const CopyButton = ({ text, label = "Copy" }) => {
@@ -56,6 +54,7 @@ const CopyButton = ({ text, label = "Copy" }) => {
 // Function to calculate financial data for each participant
 const calculateParticipantFinances = (participants, expenses, transactions) => {
   return participants.map((participant) => {
+
     // Calculate how much this participant paid (as a creditor)
     const paidExpenses = expenses.filter((expense) => expense.paidById === participant.id)
     const amountPaid = paidExpenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -73,6 +72,7 @@ const calculateParticipantFinances = (participants, expenses, transactions) => {
     // Calculate final balance
     const finalBalance = amountPaid - amountOwedToThem
     // const finalBalance = amountOwed - amountPaid
+
 
     // Calculate contribution to each expense
     const expenseContributions = expenses
@@ -94,7 +94,7 @@ const calculateParticipantFinances = (participants, expenses, transactions) => {
       })
       .filter((item) => item.contribution > 0 || item.isPayer)
 
-    console.log(expenseContributions)
+      console.log(expenseContributions);
     // Determine if this participant is a creditor or debtor
     const isCreditor = amountOwedToThem > 0
     const isDebtor = amountOwed > 0
@@ -110,7 +110,7 @@ const calculateParticipantFinances = (participants, expenses, transactions) => {
       paidExpenses,
       isCreditor,
       isDebtor,
-      totalContributions,
+      totalContributions
     }
   })
 }
@@ -280,7 +280,7 @@ export default function GatheringPage() {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">{gathering.title}</h1>
-          <p className="text-muted-foreground">{formatDisplayDate(gathering.date)}</p>
+          <p className="text-muted-foreground">{format(new Date(gathering.date), "MMMM d, yyyy")}</p>
         </div>
       </div>
 
@@ -792,8 +792,7 @@ function DetailedFinancialList({ gathering, participants, expenses, transactions
               </div>
 
               <div>
-                <span className="text-muted-foreground">Total Gastado:</span>{" "}
-                {formatCurrency(finance.totalContributions)}
+                <span className="text-muted-foreground">Total Gastado:</span> {formatCurrency(finance.totalContributions)}
                 {/* <span className="text-muted-foreground">Final Balance:</span> {formatCurrency(finance.finalBalance)} */}
               </div>
             </div>
@@ -836,7 +835,7 @@ function DetailedFinancialList({ gathering, participants, expenses, transactions
                 </ul>
               </div>
 
-              {/* <div className="pt-2 border-t">
+                {/* <div className="pt-2 border-t">
                   <div className="flex justify-between text-sm font-medium">
                     <span>Net Amount:</span>
                     <span>{formatCurrency(finance.totalContributions)}</span>
@@ -902,7 +901,7 @@ function CopySummaryButton({ gathering, participants, transactions, expenses, us
 
     // Generate the summary text
     let summary = `💰 EXPENSE SUMMARY: ${gathering.title.toUpperCase()} 💰\n`
-    summary += `Date: ${formatDisplayDate(gathering.date)}\n`
+    summary += `Date: ${format(new Date(gathering.date), "MMMM yyyy")}\n`
     summary += `Total: ${formatCurrency(expenses.reduce((sum, expense) => sum + expense.amount, 0))}\n\n`
 
     // Add expense breakdown
@@ -972,12 +971,10 @@ function CopySummaryButton({ gathering, participants, transactions, expenses, us
         }
 
         summary += `\n`
-                
       },
     )
 
-    return summary += `Podes ver mas detalle en 🔗: https://gasto-que-si-campeon.vercel.app/gatherings`
-
+    return summary
   }
 
   const handleCopy = async () => {
@@ -1020,4 +1017,3 @@ function CopySummaryButton({ gathering, participants, transactions, expenses, us
     </>
   )
 }
-

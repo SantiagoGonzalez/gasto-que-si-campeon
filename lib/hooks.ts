@@ -81,4 +81,3 @@ export function useMobileDialog(isOpen: boolean) {
 
   return { dialogRef, isMobile }
 }
-

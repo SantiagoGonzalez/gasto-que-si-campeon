@@ -1,12 +1,35 @@
 "use client"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useLanguage } from "@/lib/language-context"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  THEME_LIGHT_EN,
+  THEME_LIGHT_ES,
+  THEME_DARK_EN,
+  THEME_DARK_ES,
+  THEME_SYSTEM_EN,
+  THEME_SYSTEM_ES,
+} from "@/lib/text-languages"
 
 export function ModeToggle() {
   const { setTheme } = useTheme()
+  const { language } = useLanguage()
+
+  const getThemeText = (theme: string) => {
+    switch (theme) {
+      case "light":
+        return language === "EN" ? THEME_LIGHT_EN : THEME_LIGHT_ES
+      case "dark":
+        return language === "EN" ? THEME_DARK_EN : THEME_DARK_ES
+      case "system":
+        return language === "EN" ? THEME_SYSTEM_EN : THEME_SYSTEM_ES
+      default:
+        return theme
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -18,11 +41,10 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("light")}>{getThemeText("light")}</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>{getThemeText("dark")}</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>{getThemeText("system")}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
-

@@ -67,4 +67,3 @@ export function EditExpenseDialog({ expense, gatheringId, participants, onSubmit
     </>
   )
 }
-

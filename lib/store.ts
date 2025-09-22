@@ -2,7 +2,6 @@
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { supabaseAdmin } from "./supabase"
 
 export type UserPreferences = {
   isVegan: boolean
@@ -49,26 +48,22 @@ type Store = {
   users: User[]
   gatherings: Gathering[]
   expenses: Expense[]
-  isLoading: boolean
-  error: string | null
 
   // User actions
-  fetchUsers: () => Promise<void>
-  addUser: (user: Omit<User, "id"> & { id?: string }) => Promise<string>
-  updateUser: (id: string, user: Partial<Omit<User, "id">>) => Promise<void>
-  removeUser: (id: string) => Promise<void>
+  addUser: (user: Omit<User, "id"> & { id?: string }) => string
+  updateUser: (id: string, user: Partial<Omit<User, "id">>) => void
+  removeUser: (id: string) => void
 
   // Gathering actions
-  fetchGatherings: () => Promise<void>
-  addGathering: (gathering: Omit<Gathering, "id">) => Promise<string>
-  updateGathering: (id: string, gathering: Partial<Omit<Gathering, "id">>) => Promise<void>
-  removeGathering: (id: string) => Promise<void>
+  // Update the addGathering function to include the hostId parameter
+  addGathering: (gathering: Omit<Gathering, "id">) => string
+  updateGathering: (id: string, gathering: Partial<Omit<Gathering, "id">>) => void
+  removeGathering: (id: string) => void
 
   // Expense actions
-  fetchExpenses: () => Promise<void>
-  addExpense: (expense: Omit<Expense, "id">) => Promise<void>
-  updateExpense: (id: string, expense: Partial<Omit<Expense, "id">>) => Promise<void>
-  removeExpense: (id: string) => Promise<void>
+  addExpense: (expense: Omit<Expense, "id">) => void
+  updateExpense: (id: string, expense: Partial<Omit<Expense, "id">>) => void
+  removeExpense: (id: string) => void
 
   // Calculation methods
   calculateDebts: (gatheringId: string) => Transaction[]
@@ -80,476 +75,65 @@ export const useStore = create<Store>()(
       users: [],
       gatherings: [],
       expenses: [],
-      isLoading: false,
-      error: null,
 
-      fetchUsers: async () => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { data, error } = await supabaseAdmin.from("users").select("*")
-
-          if (error) throw error
-
-          const formattedUsers: User[] = data.map((user) => ({
-            id: user.id,
-            name: user.name,
-            alias: user.alias,
-            preferences: {
-              isVegan: user.is_vegan,
-              participatesInHerb: user.participates_in_herb,
-            },
-          }))
-
-          set({ users: formattedUsers, isLoading: false })
-        } catch (error: any) {
-          console.error("Error fetching users:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      addUser: (user) => {
+        const id = user.id || crypto.randomUUID()
+        set((state) => ({
+          users: [...state.users, { ...user, id }],
+        }))
+        return id
       },
 
-      addUser: async (user) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { data, error } = await supabaseAdmin
-            .from("users")
-            .insert({
-              id: user.id,
-              name: user.name,
-              alias: user.alias || user.name.split(" ")[0],
-              is_vegan: user.preferences.isVegan,
-              participates_in_herb: user.preferences.participatesInHerb,
-            })
-            .select()
-
-          if (error) throw error
-
-          const newUser: User = {
-            id: data[0].id,
-            name: data[0].name,
-            alias: data[0].alias,
-            preferences: {
-              isVegan: data[0].is_vegan,
-              participatesInHerb: data[0].participates_in_herb,
-            },
-          }
-
-          set((state) => ({
-            users: [...state.users, newUser],
-            isLoading: false,
-          }))
-
-          return newUser.id
-        } catch (error: any) {
-          console.error("Error adding user:", error)
-          set({ error: error.message, isLoading: false })
-          return ""
-        }
+      updateUser: (id, user) => {
+        set((state) => ({
+          users: state.users.map((u) => (u.id === id ? { ...u, ...user } : u)),
+        }))
       },
 
-      updateUser: async (id, user) => {
-        set({ isLoading: true, error: null })
-        try {
-          const updateData: any = {}
-
-          if (user.name) updateData.name = user.name
-          if (user.alias) updateData.alias = user.alias
-          if (user.preferences) {
-            if (user.preferences.isVegan !== undefined) updateData.is_vegan = user.preferences.isVegan
-            if (user.preferences.participatesInHerb !== undefined)
-              updateData.participates_in_herb = user.preferences.participatesInHerb
-          }
-
-          // Use admin client to bypass RLS
-          const { error } = await supabaseAdmin.from("users").update(updateData).eq("id", id)
-
-          if (error) throw error
-
-          set((state) => ({
-            users: state.users.map((u) => (u.id === id ? { ...u, ...user } : u)),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error updating user:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      removeUser: (id) => {
+        set((state) => ({
+          users: state.users.filter((u) => u.id !== id),
+        }))
       },
 
-      removeUser: async (id) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { error } = await supabaseAdmin.from("users").delete().eq("id", id)
-
-          if (error) throw error
-
-          set((state) => ({
-            users: state.users.filter((u) => u.id !== id),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error removing user:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      addGathering: (gathering) => {
+        const id = crypto.randomUUID()
+        set((state) => ({
+          gatherings: [...state.gatherings, { ...gathering, id }],
+        }))
+        return id
       },
 
-      fetchGatherings: async () => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { data: gatheringsData, error: gatheringsError } = await supabaseAdmin.from("gatherings").select("*")
-
-          if (gatheringsError) throw gatheringsError
-
-          // Fetch gathering participants
-          const { data: participantsData, error: participantsError } = await supabaseAdmin
-            .from("gathering_participants")
-            .select("*")
-
-          if (participantsError) throw participantsError
-
-          // Group participants by gathering
-          const participantsByGathering: Record<string, string[]> = {}
-          participantsData.forEach((p) => {
-            if (!participantsByGathering[p.gathering_id]) {
-              participantsByGathering[p.gathering_id] = []
-            }
-            participantsByGathering[p.gathering_id].push(p.user_id)
-          })
-
-          // Format gatherings with participants
-          const formattedGatherings: Gathering[] = gatheringsData.map((g) => ({
-            id: g.id,
-            title: g.title,
-            date: g.date,
-            hostId: g.host_id || undefined,
-            participants: participantsByGathering[g.id] || [],
-          }))
-
-          set({ gatherings: formattedGatherings, isLoading: false })
-        } catch (error: any) {
-          console.error("Error fetching gatherings:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      updateGathering: (id, gathering) => {
+        set((state) => ({
+          gatherings: state.gatherings.map((g) => (g.id === id ? { ...g, ...gathering } : g)),
+        }))
       },
 
-      addGathering: async (gathering) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { data: gatheringData, error: gatheringError } = await supabaseAdmin
-            .from("gatherings")
-            .insert({
-              title: gathering.title,
-              date: gathering.date,
-              host_id: gathering.hostId,
-            })
-            .select()
-
-          if (gatheringError) throw gatheringError
-
-          const gatheringId = gatheringData[0].id
-
-          // Insert participants
-          const participantsToInsert = gathering.participants.map((userId) => ({
-            gathering_id: gatheringId,
-            user_id: userId,
-          }))
-
-          if (participantsToInsert.length > 0) {
-            const { error: participantsError } = await supabaseAdmin
-              .from("gathering_participants")
-              .insert(participantsToInsert)
-
-            if (participantsError) throw participantsError
-          }
-
-          const newGathering: Gathering = {
-            id: gatheringId,
-            title: gathering.title,
-            date: gathering.date,
-            participants: gathering.participants,
-            hostId: gathering.hostId,
-          }
-
-          set((state) => ({
-            gatherings: [...state.gatherings, newGathering],
-            isLoading: false,
-          }))
-
-          return gatheringId
-        } catch (error: any) {
-          console.error("Error adding gathering:", error)
-          set({ error: error.message, isLoading: false })
-          return ""
-        }
+      removeGathering: (id) => {
+        set((state) => ({
+          gatherings: state.gatherings.filter((g) => g.id !== id),
+          expenses: state.expenses.filter((e) => e.gatheringId !== id),
+        }))
       },
 
-      updateGathering: async (id, gathering) => {
-        set({ isLoading: true, error: null })
-        try {
-          const updateData: any = {}
-
-          if (gathering.title) updateData.title = gathering.title
-          if (gathering.date) updateData.date = gathering.date
-          if (gathering.hostId !== undefined) updateData.host_id = gathering.hostId
-
-          // Update gathering
-          if (Object.keys(updateData).length > 0) {
-            const { error: gatheringError } = await supabaseAdmin.from("gatherings").update(updateData).eq("id", id)
-
-            if (gatheringError) throw gatheringError
-          }
-
-          // Update participants if provided
-          if (gathering.participants) {
-            // Delete existing participants
-            const { error: deleteError } = await supabaseAdmin
-              .from("gathering_participants")
-              .delete()
-              .eq("gathering_id", id)
-
-            if (deleteError) throw deleteError
-
-            // Insert new participants
-            const participantsToInsert = gathering.participants.map((userId) => ({
-              gathering_id: id,
-              user_id: userId,
-            }))
-
-            if (participantsToInsert.length > 0) {
-              const { error: insertError } = await supabaseAdmin
-                .from("gathering_participants")
-                .insert(participantsToInsert)
-
-              if (insertError) throw insertError
-            }
-          }
-
-          set((state) => ({
-            gatherings: state.gatherings.map((g) => (g.id === id ? { ...g, ...gathering } : g)),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error updating gathering:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      addExpense: (expense) => {
+        const id = crypto.randomUUID()
+        set((state) => ({
+          expenses: [...state.expenses, { ...expense, id }],
+        }))
       },
 
-      removeGathering: async (id) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Delete gathering (cascade will handle participants and expenses)
-          const { error } = await supabaseAdmin.from("gatherings").delete().eq("id", id)
-
-          if (error) throw error
-
-          set((state) => ({
-            gatherings: state.gatherings.filter((g) => g.id !== id),
-            expenses: state.expenses.filter((e) => e.gatheringId !== id),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error removing gathering:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      updateExpense: (id, expense) => {
+        set((state) => ({
+          expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...expense } : e)),
+        }))
       },
 
-      fetchExpenses: async () => {
-        set({ isLoading: true, error: null })
-        try {
-          // Use admin client to bypass RLS
-          const { data: expensesData, error: expensesError } = await supabaseAdmin.from("expenses").select("*")
-
-          if (expensesError) throw expensesError
-
-          // Fetch expense participants
-          const { data: participantsData, error: participantsError } = await supabaseAdmin
-            .from("expense_participants")
-            .select("*")
-
-          if (participantsError) throw participantsError
-
-          // Group participants by expense
-          const participantsByExpense: Record<string, string[]> = {}
-          participantsData.forEach((p) => {
-            if (!participantsByExpense[p.expense_id]) {
-              participantsByExpense[p.expense_id] = []
-            }
-            participantsByExpense[p.expense_id].push(p.user_id)
-          })
-
-          // Format expenses with participants
-          const formattedExpenses: Expense[] = expensesData.map((e) => ({
-            id: e.id,
-            gatheringId: e.gathering_id,
-            description: e.description,
-            amount: e.amount,
-            category: e.category as ExpenseCategory,
-            paidById: e.paid_by_id,
-            participants: participantsByExpense[e.id] || [],
-            date: e.date,
-            isMeat: e.is_meat || false,
-          }))
-
-          set({ expenses: formattedExpenses, isLoading: false })
-        } catch (error: any) {
-          console.error("Error fetching expenses:", error)
-          set({ error: error.message, isLoading: false })
-        }
-      },
-
-      addExpense: async (expense) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Validate IDs
-          if (!expense.gatheringId || typeof expense.gatheringId !== "string") {
-            throw new Error("Invalid gathering ID")
-          }
-
-          if (!expense.paidById || typeof expense.paidById !== "string") {
-            throw new Error("Invalid payer ID")
-          }
-
-          // Validate participants
-          if (!Array.isArray(expense.participants) || expense.participants.length === 0) {
-            throw new Error("At least one participant is required")
-          }
-
-          // Filter out any invalid participant IDs
-          const validParticipants = expense.participants.filter((id) => id && typeof id === "string")
-
-          if (validParticipants.length === 0) {
-            throw new Error("No valid participants provided")
-          }
-
-          // Use admin client to bypass RLS
-          const { data: expenseData, error: expenseError } = await supabaseAdmin
-            .from("expenses")
-            .insert({
-              gathering_id: expense.gatheringId,
-              description: expense.description,
-              amount: expense.amount,
-              category: expense.category,
-              paid_by_id: expense.paidById,
-              is_meat: expense.category === "food" ? expense.isMeat : null,
-              date: expense.date,
-            })
-            .select()
-
-          if (expenseError) throw expenseError
-
-          const expenseId = expenseData[0].id
-
-          // Insert participants
-          const participantsToInsert = validParticipants.map((userId) => ({
-            expense_id: expenseId,
-            user_id: userId,
-          }))
-
-          if (participantsToInsert.length > 0) {
-            const { error: participantsError } = await supabaseAdmin
-              .from("expense_participants")
-              .insert(participantsToInsert)
-
-            if (participantsError) throw participantsError
-          }
-
-          const newExpense: Expense = {
-            id: expenseId,
-            gatheringId: expense.gatheringId,
-            description: expense.description,
-            amount: expense.amount,
-            category: expense.category,
-            paidById: expense.paidById,
-            participants: validParticipants,
-            date: expense.date,
-            isMeat: expense.category === "food" ? expense.isMeat : undefined,
-          }
-
-          set((state) => ({
-            expenses: [...state.expenses, newExpense],
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error adding expense:", error)
-          set({ error: error.message, isLoading: false })
-        }
-      },
-
-      updateExpense: async (id, expense) => {
-        set({ isLoading: true, error: null })
-        try {
-          const updateData: any = {}
-
-          if (expense.description) updateData.description = expense.description
-          if (expense.amount !== undefined) updateData.amount = expense.amount
-          if (expense.category) updateData.category = expense.category
-          if (expense.paidById) updateData.paid_by_id = expense.paidById
-          if (expense.date) updateData.date = expense.date
-          if (expense.category === "food" && expense.isMeat !== undefined) {
-            updateData.is_meat = expense.isMeat
-          }
-
-          // Update expense
-          if (Object.keys(updateData).length > 0) {
-            const { error: expenseError } = await supabaseAdmin.from("expenses").update(updateData).eq("id", id)
-
-            if (expenseError) throw expenseError
-          }
-
-          // Update participants if provided
-          if (expense.participants) {
-            // Delete existing participants
-            const { error: deleteError } = await supabaseAdmin
-              .from("expense_participants")
-              .delete()
-              .eq("expense_id", id)
-
-            if (deleteError) throw deleteError
-
-            // Insert new participants
-            const participantsToInsert = expense.participants.map((userId) => ({
-              expense_id: id,
-              user_id: userId,
-            }))
-
-            if (participantsToInsert.length > 0) {
-              const { error: insertError } = await supabaseAdmin
-                .from("expense_participants")
-                .insert(participantsToInsert)
-
-              if (insertError) throw insertError
-            }
-          }
-
-          set((state) => ({
-            expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...expense } : e)),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error updating expense:", error)
-          set({ error: error.message, isLoading: false })
-        }
-      },
-
-      removeExpense: async (id) => {
-        set({ isLoading: true, error: null })
-        try {
-          // Delete expense (cascade will handle participants)
-          const { error } = await supabaseAdmin.from("expenses").delete().eq("id", id)
-
-          if (error) throw error
-
-          set((state) => ({
-            expenses: state.expenses.filter((e) => e.id !== id),
-            isLoading: false,
-          }))
-        } catch (error: any) {
-          console.error("Error removing expense:", error)
-          set({ error: error.message, isLoading: false })
-        }
+      removeExpense: (id) => {
+        set((state) => ({
+          expenses: state.expenses.filter((e) => e.id !== id),
+        }))
       },
 
       calculateDebts: (gatheringId) => {
@@ -647,12 +231,6 @@ export const useStore = create<Store>()(
     }),
     {
       name: "expense-splitter-storage",
-      partialize: (state) => ({
-        users: state.users,
-        gatherings: state.gatherings,
-        expenses: state.expenses,
-      }),
     },
   ),
 )
-

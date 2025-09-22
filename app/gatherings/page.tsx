@@ -8,10 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-// Use our utility file instead of direct date-fns imports
-import { formatMonthYear, parseISODate } from "@/utils/date-utils"
+import { format, parseISO } from "date-fns"
 import { PlusCircle, Search, Calendar, Users, DollarSign, MoreVertical, ArrowUpDown } from "lucide-react"
-import { formatCurrency } from "@/utils/formatCurrency"
 
 type SortField = "date" | "title" | "expenses" | "participants"
 type SortOrder = "asc" | "desc"
@@ -82,6 +80,13 @@ export default function GatheringsPage() {
       setSortField(field)
       setSortOrder("desc")
     }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount)
   }
 
   return (
@@ -166,7 +171,7 @@ export default function GatheringsPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="line-clamp-1">{gathering.title}</CardTitle>
-                    <CardDescription>{formatMonthYear(parseISODate(gathering.date))}</CardDescription>
+                    <CardDescription>{format(parseISO(gathering.date), "MMMM yyyy")}</CardDescription>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -230,4 +235,3 @@ export default function GatheringsPage() {
     </div>
   )
 }
-

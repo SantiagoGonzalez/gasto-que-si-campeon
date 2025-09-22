@@ -25,4 +25,3 @@ export function getUserEmojis(user: User): string {
 
   return emojis.join(" ")
 }
-

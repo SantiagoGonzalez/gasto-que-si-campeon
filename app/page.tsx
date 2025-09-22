@@ -2,155 +2,257 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, ArrowRight } from "lucide-react"
-import { useStore } from "@/lib/store"
-// Use our utility file instead of direct date-fns imports
-import { formatMonthYear, parseISODate } from "@/utils/date-utils"
-import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Calculator, Receipt, ArrowRight, PlusCircle } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
+import {
+  PAGE_H1_TEXT_1_EN,
+  PAGE_H1_TEXT_1_ES,
+  PAGE_SPAN_TEXT_1_EN,
+  PAGE_SPAN_TEXT_1_ES,
+  PAGE_P_TEXT_1_EN,
+  PAGE_P_TEXT_1_ES,
+  PAGE_BUTTON_TEXT_1_EN,
+  PAGE_BUTTON_TEXT_1_ES,
+  PAGE_H2_TEXT_1_EN,
+  PAGE_H2_TEXT_1_ES,
+  PAGE_CARD_TITLE_1_EN,
+  PAGE_CARD_TITLE_1_ES,
+  PAGE_CARD_DESC_1_EN,
+  PAGE_CARD_DESC_1_ES,
+  PAGE_LIST_ITEM_1_EN,
+  PAGE_LIST_ITEM_1_ES,
+  PAGE_LIST_ITEM_2_EN,
+  PAGE_LIST_ITEM_2_ES,
+  PAGE_LIST_ITEM_3_EN,
+  PAGE_LIST_ITEM_3_ES,
+  PAGE_LIST_ITEM_4_EN,
+  PAGE_LIST_ITEM_4_ES,
+  PAGE_CARD_TITLE_2_EN,
+  PAGE_CARD_TITLE_2_ES,
+  PAGE_CARD_DESC_2_EN,
+  PAGE_CARD_DESC_2_ES,
+  PAGE_LIST_ITEM_5_EN,
+  PAGE_LIST_ITEM_5_ES,
+  PAGE_LIST_ITEM_6_EN,
+  PAGE_LIST_ITEM_6_ES,
+  PAGE_LIST_ITEM_7_EN,
+  PAGE_LIST_ITEM_7_ES,
+  PAGE_LIST_ITEM_8_EN,
+  PAGE_LIST_ITEM_8_ES,
+  PAGE_CARD_TITLE_3_EN,
+  PAGE_CARD_TITLE_3_ES,
+  PAGE_CARD_DESC_3_EN,
+  PAGE_CARD_DESC_3_ES,
+  PAGE_LIST_ITEM_9_EN,
+  PAGE_LIST_ITEM_9_ES,
+  PAGE_LIST_ITEM_10_EN,
+  PAGE_LIST_ITEM_10_ES,
+  PAGE_LIST_ITEM_11_EN,
+  PAGE_LIST_ITEM_11_ES,
+  PAGE_LIST_ITEM_12_EN,
+  PAGE_LIST_ITEM_12_ES,
+  PAGE_H2_TEXT_2_EN,
+  PAGE_H2_TEXT_2_ES,
+  PAGE_FEATURE_TITLE_1_EN,
+  PAGE_FEATURE_TITLE_1_ES,
+  PAGE_FEATURE_DESC_1_EN,
+  PAGE_FEATURE_DESC_1_ES,
+  PAGE_FEATURE_TITLE_2_EN,
+  PAGE_FEATURE_TITLE_2_ES,
+  PAGE_FEATURE_DESC_2_EN,
+  PAGE_FEATURE_DESC_2_ES,
+  PAGE_FEATURE_TITLE_3_EN,
+  PAGE_FEATURE_TITLE_3_ES,
+  PAGE_FEATURE_DESC_3_EN,
+  PAGE_FEATURE_DESC_3_ES,
+  PAGE_FEATURE_TITLE_4_EN,
+  PAGE_FEATURE_TITLE_4_ES,
+  PAGE_FEATURE_DESC_4_EN,
+  PAGE_FEATURE_DESC_4_ES,
+  PAGE_H2_TEXT_3_EN,
+  PAGE_H2_TEXT_3_ES,
+  PAGE_P_TEXT_2_EN,
+  PAGE_P_TEXT_2_ES,
+  PAGE_BUTTON_TEXT_2_EN,
+  PAGE_BUTTON_TEXT_2_ES,
+  PAGE_BUTTON_TEXT_3_EN,
+  PAGE_BUTTON_TEXT_3_ES,
+} from "@/lib/text-languages"
 
 export default function Home() {
-  const { gatherings, expenses, users } = useStore()
-  const [fadedCards, setFadedCards] = useState<{ [key: string]: boolean }>({})
+  const { language } = useLanguage()
 
-  // Get the 3 most recent gatherings
-  const recentGatherings = [...gatherings]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 3)
-    .map((gathering) => {
-      const gatheringExpenses = expenses.filter((e) => e.gatheringId === gathering.id)
-      const totalExpenses = gatheringExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const participantCount = gathering.participants.length
-
-      return {
-        ...gathering,
-        totalExpenses,
-        participantCount,
-      }
-    })
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
-  }
-
-  const handleCardClick = (cardId: string) => {
-    setFadedCards((prev) => ({
-      ...prev,
-      [cardId]: !prev[cardId],
-    }))
+  const getText = (enText: string, esText: string) => {
+    return language === "EN" ? enText : esText
   }
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-full">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-6 sm:mb-12">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Gasto que si Campeon <span className="dark:bg-zinc-200 bg-gray-600 text-muted px-2 py-1 rounded-full text-xs ml-2">
-            BETA
-          </span></h1>
-        
-          
-          
-          <p className="text-muted-foreground text-base sm:text-lg mb-4 sm:mb-8">
-            Easily split expenses among friends with dietary preferences and custom participation
-          </p>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Hero Section */}
+      <div className="text-center mb-16">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance">
+          {getText(PAGE_H1_TEXT_1_EN, PAGE_H1_TEXT_1_ES)}{" "}
+          <span className="text-primary">{getText(PAGE_SPAN_TEXT_1_EN, PAGE_SPAN_TEXT_1_ES)}</span>
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-pretty">
+          {getText(PAGE_P_TEXT_1_EN, PAGE_P_TEXT_1_ES)}
+        </p>
+        <Link href="/gatherings/new">
+          <Button size="lg" className="gap-2 h-12 px-8 text-lg">
+            <PlusCircle className="h-5 w-5" />
+            {getText(PAGE_BUTTON_TEXT_1_EN, PAGE_BUTTON_TEXT_1_ES)}
+          </Button>
+        </Link>
+      </div>
+
+      {/* How It Works Section */}
+      <div className="mb-16">
+        <h2 className="text-3xl font-bold text-center mb-12">{getText(PAGE_H2_TEXT_1_EN, PAGE_H2_TEXT_1_ES)}</h2>
+        <div className="grid gap-8 md:grid-cols-3">
+          {/* Step 1: Create Gathering */}
+          <Card className="relative">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Users className="h-8 w-8 text-primary" />
+              </div>
+              <div className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                1
+              </div>
+              <CardTitle>{getText(PAGE_CARD_TITLE_1_EN, PAGE_CARD_TITLE_1_ES)}</CardTitle>
+              <CardDescription>{getText(PAGE_CARD_DESC_1_EN, PAGE_CARD_DESC_1_ES)}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• {getText(PAGE_LIST_ITEM_1_EN, PAGE_LIST_ITEM_1_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_2_EN, PAGE_LIST_ITEM_2_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_3_EN, PAGE_LIST_ITEM_3_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_4_EN, PAGE_LIST_ITEM_4_ES)}</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Step 2: Add Expenses */}
+          <Card className="relative">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Receipt className="h-8 w-8 text-primary" />
+              </div>
+              <div className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                2
+              </div>
+              <CardTitle>{getText(PAGE_CARD_TITLE_2_EN, PAGE_CARD_TITLE_2_ES)}</CardTitle>
+              <CardDescription>{getText(PAGE_CARD_DESC_2_EN, PAGE_CARD_DESC_2_ES)}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• {getText(PAGE_LIST_ITEM_5_EN, PAGE_LIST_ITEM_5_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_6_EN, PAGE_LIST_ITEM_6_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_7_EN, PAGE_LIST_ITEM_7_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_8_EN, PAGE_LIST_ITEM_8_ES)}</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Step 3: Calculate & Settle */}
+          <Card className="relative">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Calculator className="h-8 w-8 text-primary" />
+              </div>
+              <div className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                3
+              </div>
+              <CardTitle>{getText(PAGE_CARD_TITLE_3_EN, PAGE_CARD_TITLE_3_ES)}</CardTitle>
+              <CardDescription>{getText(PAGE_CARD_DESC_3_EN, PAGE_CARD_DESC_3_ES)}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• {getText(PAGE_LIST_ITEM_9_EN, PAGE_LIST_ITEM_9_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_10_EN, PAGE_LIST_ITEM_10_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_11_EN, PAGE_LIST_ITEM_11_ES)}</li>
+                <li>• {getText(PAGE_LIST_ITEM_12_EN, PAGE_LIST_ITEM_12_ES)}</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="mb-16">
+        <h2 className="text-3xl font-bold text-center mb-12">{getText(PAGE_H2_TEXT_2_EN, PAGE_H2_TEXT_2_ES)}</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">🌱</div>
+                {getText(PAGE_FEATURE_TITLE_1_EN, PAGE_FEATURE_TITLE_1_ES)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{getText(PAGE_FEATURE_DESC_1_EN, PAGE_FEATURE_DESC_1_ES)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">💰</div>
+                {getText(PAGE_FEATURE_TITLE_2_EN, PAGE_FEATURE_TITLE_2_ES)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{getText(PAGE_FEATURE_DESC_2_EN, PAGE_FEATURE_DESC_2_ES)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">📅</div>
+                {getText(PAGE_FEATURE_TITLE_3_EN, PAGE_FEATURE_TITLE_3_ES)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{getText(PAGE_FEATURE_DESC_3_EN, PAGE_FEATURE_DESC_3_ES)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">👥</div>
+                {getText(PAGE_FEATURE_TITLE_4_EN, PAGE_FEATURE_TITLE_4_ES)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{getText(PAGE_FEATURE_DESC_4_EN, PAGE_FEATURE_DESC_4_ES)}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="text-center bg-muted/50 rounded-2xl p-12">
+        <h2 className="text-3xl font-bold mb-4">{getText(PAGE_H2_TEXT_3_EN, PAGE_H2_TEXT_3_ES)}</h2>
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          {getText(PAGE_P_TEXT_2_EN, PAGE_P_TEXT_2_ES)}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/gatherings/new">
-            <Button size="lg" className="gap-2 h-10 sm:h-12 rounded-lg">
+            <Button size="lg" className="gap-2 h-12 px-8">
               <PlusCircle className="h-5 w-5" />
-              New Gathering
+              {getText(PAGE_BUTTON_TEXT_2_EN, PAGE_BUTTON_TEXT_2_ES)}
             </Button>
           </Link>
-        </div>
-
-        <div className="grid gap-4 sm:gap-8 grid-cols-1 sm:grid-cols-2">
-          <div
-            className={`bg-card rounded-lg p-4 sm:p-6 shadow-sm border cursor-pointer transition-opacity duration-300 ease-in-out ${fadedCards["card1"] ? "opacity-0 max-h-0" : "opacity-100"}`}
-            onClick={() => handleCardClick("card1")}
-          >
-            <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Smart Expense Splitting</h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Automatically handles dietary preferences. Vegans don't pay for meat, and only participants contribute to
-              shared items.
-            </p>
-          </div>
-          <div
-            className={`bg-card rounded-lg p-4 sm:p-6 shadow-sm border cursor-pointer transition-opacity duration-300 ease-in-out ${fadedCards["card2"] ? "opacity-0 max-h-0" : "opacity-100"}`}
-            onClick={() => handleCardClick("card2")}
-          >
-            <h2 className="text-xl font-semibold mb-3">Optimized Payments</h2>
-            <p className="text-muted-foreground">
-              Minimizes the number of transactions needed to settle debts, making it easier for everyone to pay what
-              they owe.
-            </p>
-          </div>
-          <div
-            className={`bg-card rounded-lg p-4 sm:p-6 shadow-sm border cursor-pointer transition-opacity duration-300 ease-in-out ${fadedCards["card3"] ? "opacity-0 max-h-0" : "opacity-100"}`}
-            onClick={() => handleCardClick("card3")}
-          >
-            <h2 className="text-xl font-semibold mb-3">Meeting-Based System</h2>
-            <p className="text-muted-foreground">
-              Create separate gatherings for different events, with varying participants and expense categories.
-            </p>
-          </div>
-          <div
-            className={`bg-card rounded-lg p-4 sm:p-6 shadow-sm border cursor-pointer transition-opacity duration-300 ease-in-out ${fadedCards["card4"] ? "opacity-0 max-h-0" : "opacity-100"}`}
-            onClick={() => handleCardClick("card4")}
-          >
-            <h2 className="text-xl font-semibold mb-3">User Management</h2>
-            <p className="text-muted-foreground">
-              Add friends with their names, aliases, and preferences. Easily manage who's participating in each
-              gathering.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 sm:mt-12">
-          <div className="flex justify-between items-center mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold">Recent Gatherings</h2>
-            <Link href="/gatherings">
-              <Button variant="ghost" className="gap-1 h-9 rounded-lg">
-                View All
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {recentGatherings.length === 0 ? (
-            <div className="bg-muted rounded-lg p-8 text-center">
-              <p className="text-muted-foreground mb-4">No gatherings yet. Create your first one!</p>
-              <Link href="/gatherings/new">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <PlusCircle className="h-5 w-5" />
-                  New Gathering
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              {recentGatherings.map((gathering) => (
-                <Link href={`/gatherings/${gathering.id}`} key={gathering.id} className="block">
-                  <div className="bg-card rounded-lg p-4 sm:p-5 shadow-sm border hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1">{gathering.title}</h3>
-                    <p className="text-muted-foreground text-xs sm:text-sm mb-2 sm:mb-3">
-                      {formatMonthYear(parseISODate(gathering.date))}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs sm:text-sm">
-                        {gathering.participantCount} {gathering.participantCount === 1 ? "person" : "people"}
-                      </span>
-                      <span className="font-medium text-sm sm:text-base">
-                        {formatCurrency(gathering.totalExpenses)}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          <Link href="/gatherings">
+            <Button variant="outline" size="lg" className="gap-2 h-12 px-8 bg-transparent">
+              {getText(PAGE_BUTTON_TEXT_3_EN, PAGE_BUTTON_TEXT_3_ES)}
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
   )
 }
-
